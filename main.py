@@ -11,6 +11,7 @@ from cryptography import x509
 from cryptography.hazmat import backends
 from ast import literal_eval
 from fastapi import FastAPI, File, UploadFile, Form
+from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 
 from endesive import hsm, pdf
@@ -154,5 +155,11 @@ async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile 
     with open(fname, 'wb') as fp:
         fp.write(datau)
         fp.write(datas)
+    
+    def iterfile():  
+        with open(fname, mode="rb") as file_like:  
+            yield from file_like  
 
-    return name
+    return StreamingResponse(iterfile(), media_type="application/pdf")
+
+
