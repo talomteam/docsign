@@ -1,7 +1,7 @@
 #!/usr/bin/env vpython3
 
 from fastapi import FastAPI, File, UploadFile, Form
-from pydantic import BaseModel
+from ast import literal_eval
 import pathlib 
 import aiofiles
 
@@ -35,8 +35,10 @@ class HSM(hsm.HSM):
             [(PK11.CKA_CLASS, PK11.CKO_PRIVATE_KEY), (PK11.CKA_ID, self.keyID)])
         if len(rec) ==0:
             label = self.name
+            keyname=self.keyID.hex()
+            sn = literal_eval('0x{}'.format(keyname))
             self.gen_privkey(label, self.keyID)
-            self.ca_sign(self.keyID, label, 0x666690,self.name, 365, cakeyID)
+            self.ca_sign(self.keyID, label, sn,self.name, 365, cakeyID)
             
         #self.cert_export('cert-hsm-ca', cakeyID)
         self.cert_export('cert-hsm-'+self.keyID, self.keyID)
@@ -87,7 +89,8 @@ app = FastAPI()
 
 @app.post("/sign")
 async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile = File(), fs_pic_sign: UploadFile = File(None)):
-    clshsm = HSM(user.name, user.userkey, "CryptoServer PKCS11 Token","12345")
+    keyID = bytes.fromhex(userkey)
+    clshsm = HSM(name, keyID, "CryptoServer PKCS11 Token","12345")
     clshsm.existcert()
     
     source_path = '{}/{}/{}'.format(pathlib.Path().resolve(),
