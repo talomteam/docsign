@@ -119,7 +119,8 @@ async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile 
 
     ocspurl = 'https://ocsp.certum.pl/'
     #ocspissuer = open('CertumDigitalIdentificationCASHA2.crt', 'rb').read()
-    ocspissuer = cls.certificate()[1]
+    keyid, cert = cls.certificate()
+    ocspissuer = cert
     ocspissuer = x509.load_pem_x509_certificate(
         ocspissuer, backends.default_backend())
 
