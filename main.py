@@ -18,16 +18,14 @@ else:
 class HSM(hsm.HSM):
     def existcert(self, keyID, name):
         cakeyID = bytes((0x1))
+        label = name
+        keyname = keyID.hex()
         rec = self.session.findObjects(
             [(PK11.CKA_CLASS, PK11.CKO_PRIVATE_KEY), (PK11.CKA_ID, keyID)])
         if len(rec) == 0:
-            label = name
-            keyname = keyID.hex()
             sn = literal_eval('0x{}'.format(keyname))
             self.gen_privkey(label, keyID)
             self.ca_sign(keyID, label, sn, name, 365, cakeyID)
-
-        # self.cert_export('cert-hsm-ca', cakeyID)
         self.cert_export('cert-hsm-{}'.format(keyname),keyID)
 
 
