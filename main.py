@@ -113,12 +113,13 @@ async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile 
     # cls.login("CryptoServer PKCS11 Token", "12345")
     cls.existcert(keyID, name)
     # cls.logout()
-    """
+    
     tspurl = "http://time.certum.pl"
     tspurl = "http://public-qlts.certum.pl/qts-17"
 
     ocspurl = 'https://ocsp.certum.pl/'
-    ocspissuer = open('CertumDigitalIdentificationCASHA2.crt', 'rb').read()
+    #ocspissuer = open('CertumDigitalIdentificationCASHA2.crt', 'rb').read()
+    ocspissuer = cls.certificate()[1]
     ocspissuer = x509.load_pem_x509_certificate(
         ocspissuer, backends.default_backend())
 
