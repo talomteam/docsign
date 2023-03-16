@@ -152,5 +152,5 @@ async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile 
     with open(fname, 'wb') as fp:
         fp.write(datau)
         fp.write(datas)
-    """
+
     return name
