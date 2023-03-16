@@ -138,9 +138,7 @@ async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile 
 
     fname = source_path
     print(fname)
-    if len(sys.argv) > 1:
-        fname = sys.argv[1]
-
+    
     datau = open(fname, 'rb').read()
     datas = pdf.cms.sign(datau, dct,
                          None, None,
