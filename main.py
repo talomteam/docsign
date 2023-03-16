@@ -89,7 +89,7 @@ app = FastAPI()
 
 @app.post("/sign")
 async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile = File(), fs_pic_sign: UploadFile = File(None)):
-    keyID = bytes.fromhex(int(userkey))
+    keyID = bytes.fromhex(userkey)
     clshsm = HSM(name, keyID, "CryptoServer PKCS11 Token","12345")
     clshsm.existcert()
     

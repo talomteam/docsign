@@ -8,6 +8,8 @@ app = FastAPI()
 
 @app.post("/sign")
 async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile = File(),fs_pic_sign: UploadFile = File(None)):
+    keyID = bytes.fromhex(userkey)
+    print(keyID)
     source_path = '{}/{}/{}'.format(pathlib.Path().resolve(),'source',fs_source.filename)
     async with aiofiles.open(source_path,"wb") as out_file:
         content = await fs_source.read()
