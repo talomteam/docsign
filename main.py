@@ -19,9 +19,10 @@ class HSM(hsm.HSM):
     def __init__(self, name):
         super().__init__(dllpath)
         self.name = name
-        print(self.name)
+        
     def existcert(self, keyID, name):
         cakeyID = bytes((0x1))
+        print(self.name)
         label = name
         keyname = keyID.hex()
         rec = self.session.findObjects(
