@@ -1,8 +1,9 @@
 #!/usr/bin/env vpython3
 
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form
 from pydantic import BaseModel
-from pathlib import Path
+import pathlib 
+import aiofiles
 
 import os
 import sys
@@ -79,35 +80,27 @@ class HSM(hsm.HSM):
             sig = self.session.sign(privKey, data, PK11.Mechanism(mech, None))
             return bytes(sig)
         finally:
-            self.logout()
-            
-
-
-
-
-class User(BaseModel):
-    userkey: str
-    name: str
-    fs_source: UploadFile = File()
-    fs_pic_sign: UploadFile = File(None)
-
+            self.logout()     
 
 app = FastAPI()
 
 
 @app.post("/sign")
-async def sign(user: User):
+async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile = File(), fs_pic_sign: UploadFile = File(None)):
     clshsm = HSM(user.name, user.userkey, "CryptoServer PKCS11 Token","12345")
     clshsm.existcert()
     
-    if not user.fs_source:
-        return {'message': 'No upload file sent'}
-    else:
-        path = Path('/tmp') / user.fs_source.filename
-        size = path.write_bytes(await user.fs_source.read())
-        
+    source_path = '{}/{}/{}'.format(pathlib.Path().resolve(),
+                                    'source', fs_source.filename)
+    async with aiofiles.open(source_path, "wb") as out_file:
+        content = await fs_source.read()
+        await out_file.write(content)
 
-
-        return {'file': path, 'bytes': size}
-
-    return user
+    if fs_pic_sign:
+        sign_path = '{}/{}/{}'.format(pathlib.Path().resolve(),
+                                      'sign', fs_pic_sign.filename)
+        async with aiofiles.open(sign_path, "wb") as out_file:
+            content = await fs_pic_sign.read()
+            await out_file.write(content)
+    return name
+    
