@@ -48,6 +48,7 @@ class HSM(hsm.HSM):
     def certificate(self):
         self.login(self.label_port, self.pin_port)
         keyid = self.keyID
+        print("key id {}".format(keyid))
         try:
             pk11objects = self.session.findObjects(
                 [(PK11.CKA_CLASS, PK11.CKO_CERTIFICATE)])
