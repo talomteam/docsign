@@ -1,14 +1,19 @@
 #!/usr/bin/env vpython3
 
-import base64
 import sys
 import os
 import aiofiles
 import pathlib
+
+import PyKCS11 as PK11
+import datetime
+from cryptography import x509
+from cryptography.hazmat import backends
 from ast import literal_eval
 from fastapi import FastAPI, File, UploadFile, Form
-import PyKCS11 as PK11
-from endesive import hsm
+from dotenv import load_dotenv
+
+from endesive import hsm, pdf
 
 if sys.platform == 'win32':
     dllpath = r'W:\binw\SoftHSM2\lib\softhsm2-x64.dll'
@@ -25,8 +30,7 @@ class HSM(hsm.HSM):
         
     def existcert(self, keyID, name):
         self.login(self.label_port, self.pin_port)
-        cakeyID = bytes((0x1))
-        print(self.name)
+        cakeyID = bytes((0x1,))
         label = name
         keyname = keyID.hex()
         rec = self.session.findObjects(
@@ -107,5 +111,43 @@ async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile 
     #cls.login("CryptoServer PKCS11 Token", "12345")
     cls.existcert(keyID, name)
     #cls.logout()
+    """
+    tspurl = "http://time.certum.pl"
+    tspurl = "http://public-qlts.certum.pl/qts-17"
 
+    ocspurl = 'https://ocsp.certum.pl/'
+    ocspissuer = open('CertumDigitalIdentificationCASHA2.crt', 'rb').read()
+    ocspissuer = x509.load_pem_x509_certificate(
+        ocspissuer, backends.default_backend())
+
+    date = datetime.datetime.utcnow() - datetime.timedelta(hours=12)
+    date = date.strftime('D:%Y%m%d%H%M%S+00\'00\'')
+    dct = {
+        'sigflags': 3,
+        'contact': 'mak@trisoft.com.pl',
+        'location': 'Szczecin',
+        'signingdate': date.encode(),
+        'reason': 'Dokument podpisany cyfrowo',
+        'application': 'app:xyz',
+    }
+
+    fname = source_path
+    if len(sys.argv) > 1:
+        fname = sys.argv[1]
+
+    datau = open(fname, 'rb').read()
+    datas = pdf.cms.sign(datau, dct,
+                         None, None,
+                         [],
+                         'sha256',
+                         cls,
+                         tspurl,
+                         ocspurl=ocspurl,
+                         ocspissuer=ocspissuer
+                         )
+    fname = fname.replace('.pdf', '-signed-hsm.pdf')
+    with open(fname, 'wb') as fp:
+        fp.write(datau)
+        fp.write(datas)
+    """
     return name
