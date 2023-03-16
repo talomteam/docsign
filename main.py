@@ -1,23 +1,19 @@
 #!/usr/bin/env vpython3
 
+import base64
+import sys
+import os
+import aiofiles
+import pathlib
+from ast import literal_eval
+from fastapi import FastAPI, File, UploadFile, Form
 import PyKCS11 as PK11
 from endesive import hsm
-from fastapi import FastAPI, File, UploadFile, Form
-from ast import literal_eval
-import pathlib
-import aiofiles
-
-import os
-import sys
-import base64
 
 if sys.platform == 'win32':
     dllpath = r'W:\binw\SoftHSM2\lib\softhsm2-x64.dll'
 else:
     dllpath = '/usr/lib/libcs_pkcs11_R3.so'
-
-sys.path.append('/opt/endesive')
-
 
 class HSM(hsm.HSM):
     def existcert(self, keyID, name):
