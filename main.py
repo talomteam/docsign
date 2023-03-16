@@ -120,7 +120,7 @@ async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile 
     tspurl = "http://public-qlts.certum.pl/qts-17"
 
     ocspurl = 'https://ocsp.certum.pl/'
-    ocspissuer = open('cert/cert-hsm-ca-{}'.format(userkey), 'rb').read()
+    ocspissuer = open('cert/cert-hsm-ca-{}.pem'.format(userkey), 'rb').read()
     ocspissuer = x509.load_pem_x509_certificate(
         ocspissuer, backends.default_backend())
 
