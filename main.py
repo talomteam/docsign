@@ -94,6 +94,7 @@ app = FastAPI()
 async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile = File(), fs_pic_sign: UploadFile = File(None)):
     if len(userkey) != 6:
         return "userkey length not match"
+    
     source_path = '{}/{}/{}'.format(pathlib.Path().resolve(),
                                     'source', fs_source.filename)
     async with aiofiles.open(source_path, "wb") as out_file:
@@ -136,6 +137,7 @@ async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile 
     }
 
     fname = source_path
+    print(fname)
     if len(sys.argv) > 1:
         fname = sys.argv[1]
 
