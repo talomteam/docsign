@@ -16,6 +16,10 @@ else:
     dllpath = '/usr/lib/libcs_pkcs11_R3.so'
 
 class HSM(hsm.HSM):
+    def __init__(self, name):
+        super().__init__(dllpath)
+        self.name = name
+        print(self.name)
     def existcert(self, keyID, name):
         cakeyID = bytes((0x1))
         label = name
