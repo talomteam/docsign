@@ -20,6 +20,7 @@ if sys.platform == 'win32':
 else:
     dllpath = '/usr/lib/libcs_pkcs11_R3.so'
 
+
 class HSM(hsm.HSM):
     def __init__(self, name, keyID, label_port, pin_port):
         super().__init__(dllpath)
@@ -27,7 +28,7 @@ class HSM(hsm.HSM):
         self.keyID = keyID
         self.label_port = label_port
         self.pin_port = pin_port
-        
+
     def existcert(self, keyID, name):
         self.login(self.label_port, self.pin_port)
         cakeyID = bytes((0x1,))
@@ -39,7 +40,7 @@ class HSM(hsm.HSM):
             sn = literal_eval('0x{}'.format(keyname))
             self.gen_privkey(label, keyID)
             self.ca_sign(keyID, label, sn, name, 365, cakeyID)
-        self.cert_export('cert-hsm-{}'.format(keyname),keyID)
+        self.cert_export('cert-hsm-{}'.format(keyname), keyID)
         self.logout()
 
     def certificate(self):
@@ -89,7 +90,8 @@ app = FastAPI()
 
 @app.post("/sign")
 async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile = File(), fs_pic_sign: UploadFile = File(None)):
-
+    if len(userkey) != 6:
+        return "userkey length not match"
     source_path = '{}/{}/{}'.format(pathlib.Path().resolve(),
                                     'source', fs_source.filename)
     async with aiofiles.open(source_path, "wb") as out_file:
@@ -106,11 +108,11 @@ async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile 
     keyID = bytes.fromhex(userkey)
     label_port = "CryptoServer PKCS11 Token"
     pin_port = "12345"
-    cls = HSM(keyID,name,label_port,pin_port)
-    #cls.create("CryptoServer PKCS11 Token", "77777", "11111")
-    #cls.login("CryptoServer PKCS11 Token", "12345")
+    cls = HSM(keyID, name, label_port, pin_port)
+    # cls.create("CryptoServer PKCS11 Token", "77777", "11111")
+    # cls.login("CryptoServer PKCS11 Token", "12345")
     cls.existcert(keyID, name)
-    #cls.logout()
+    # cls.logout()
     """
     tspurl = "http://time.certum.pl"
     tspurl = "http://public-qlts.certum.pl/qts-17"
