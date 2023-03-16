@@ -40,7 +40,9 @@ class HSM(hsm.HSM):
             sn = literal_eval('0x{}'.format(keyname))
             self.gen_privkey(label, keyID)
             self.ca_sign(keyID, label, sn, name, 365, cakeyID)
-        self.cert_export('cert-hsm-{}'.format(keyname), keyID)
+
+        self.cert_export('cert/cert-hsm-ca-{}'.format(keyname), cakeyID)
+        self.cert_export('cert/cert-hsm-{}'.format(keyname), keyID)
         self.logout()
 
     def certificate(self):
@@ -118,9 +120,7 @@ async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile 
     tspurl = "http://public-qlts.certum.pl/qts-17"
 
     ocspurl = 'https://ocsp.certum.pl/'
-    #ocspissuer = open('CertumDigitalIdentificationCASHA2.crt', 'rb').read()
-    keyid, cert = cls.certificate()
-    ocspissuer = cert
+    ocspissuer = open('cert/cert-hsm-ca-{}'.format(userkey), 'rb').read()
     ocspissuer = x509.load_pem_x509_certificate(
         ocspissuer, backends.default_backend())
 
