@@ -16,11 +16,15 @@ else:
     dllpath = '/usr/lib/libcs_pkcs11_R3.so'
 
 class HSM(hsm.HSM):
-    def __init__(self, name):
+    def __init__(self, name, keyID, label_port, pin_port):
         super().__init__(dllpath)
         self.name = name
+        self.keyID = keyID
+        self.label_port = label_port
+        self.pin_port = pin_port
         
     def existcert(self, keyID, name):
+        self.login(self.label_port, self.pin_port)
         cakeyID = bytes((0x1))
         print(self.name)
         label = name
@@ -32,6 +36,48 @@ class HSM(hsm.HSM):
             self.gen_privkey(label, keyID)
             self.ca_sign(keyID, label, sn, name, 365, cakeyID)
         self.cert_export('cert-hsm-{}'.format(keyname),keyID)
+        self.logout()
+
+    def certificate(self):
+        self.login(self.label_port, self.pin_port)
+        keyid = self.keyID
+        try:
+            pk11objects = self.session.findObjects(
+                [(PK11.CKA_CLASS, PK11.CKO_CERTIFICATE)])
+            all_attributes = [
+                # PK11.CKA_SUBJECT,
+                PK11.CKA_VALUE,
+                # PK11.CKA_ISSUER,
+                # PK11.CKA_CERTIFICATE_CATEGORY,
+                # PK11.CKA_END_DATE,
+                PK11.CKA_ID,
+            ]
+
+            for pk11object in pk11objects:
+                try:
+                    attributes = self.session.getAttributeValue(
+                        pk11object, all_attributes)
+                except PK11.PyKCS11Error as e:
+                    continue
+
+                attrDict = dict(list(zip(all_attributes, attributes)))
+                cert = bytes(attrDict[PK11.CKA_VALUE])
+                if keyid == bytes(attrDict[PK11.CKA_ID]):
+                    return keyid, cert
+        finally:
+            self.logout()
+        return None, None
+
+    def sign(self, keyid, data, mech):
+        self.login(self.label_port, self.pin_port)
+        try:
+            privKey = self.session.findObjects(
+                [(PK11.CKA_CLASS, PK11.CKO_PRIVATE_KEY), (PK11.CKA_ID, keyid)])[0]
+            mech = getattr(PK11, 'CKM_%s_RSA_PKCS' % mech.upper())
+            sig = self.session.sign(privKey, data, PK11.Mechanism(mech, None))
+            return bytes(sig)
+        finally:
+            self.logout()
 
 
 app = FastAPI()
@@ -54,10 +100,12 @@ async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile 
             await out_file.write(content)
 
     keyID = bytes.fromhex(userkey)
-    cls = HSM('12112')
-    cls.create("CryptoServer PKCS11 Token", "77777", "11111")
-    cls.login("CryptoServer PKCS11 Token", "12345")
+    label_port = "CryptoServer PKCS11 Token"
+    pin_port = "12345"
+    cls = HSM(keyID,name,label_port,pin_port)
+    #cls.create("CryptoServer PKCS11 Token", "77777", "11111")
+    #cls.login("CryptoServer PKCS11 Token", "12345")
     cls.existcert(keyID, name)
-    cls.logout()
+    #cls.logout()
 
     return name
