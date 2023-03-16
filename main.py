@@ -54,7 +54,7 @@ async def sign(userkey: str = Form(), name: str = Form(), fs_source: UploadFile 
             await out_file.write(content)
 
     keyID = bytes.fromhex(userkey)
-    cls = HSM(dllpath)
+    cls = HSM('12112')
     cls.create("CryptoServer PKCS11 Token", "77777", "11111")
     cls.login("CryptoServer PKCS11 Token", "12345")
     cls.existcert(keyID, name)
