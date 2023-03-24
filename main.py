@@ -31,20 +31,20 @@ class HSM(hsm.HSM):
         self.label_port = label_port
         self.pin_port = pin_port
 
-    def existcert(self, keyID, name):
+    def existcert(self):
         self.login(self.label_port, self.pin_port)
         cakeyID = bytes((0x1,))
-        label = name
-        keyname = keyID.hex()
+        label = self.name
+        keyname = self.keyID.hex()
         rec = self.session.findObjects(
-            [(PK11.CKA_CLASS, PK11.CKO_PRIVATE_KEY), (PK11.CKA_ID, keyID)])
+            [(PK11.CKA_CLASS, PK11.CKO_PRIVATE_KEY), (PK11.CKA_ID, self.keyID)])
         if len(rec) == 0:
             sn = literal_eval('0x{}'.format(keyname))
-            self.gen_privkey(label, keyID)
-            self.ca_sign(keyID, label, sn, name, 365, cakeyID)
+            self.gen_privkey(label, self.keyID)
+            self.ca_sign(self.keyID, label, sn, self.name, 365, cakeyID)
 
         self.cert_export('cert/cert-hsm-ca-{}'.format(keyname), cakeyID)
-        self.cert_export('cert/cert-hsm-{}'.format(keyname), keyID)
+        self.cert_export('cert/cert-hsm-{}'.format(keyname), self.keyID)
         self.logout()
 
     def certificate(self):
